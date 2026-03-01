@@ -2615,7 +2615,6 @@ local Library do
             Debounce = true 
 
             if Bool then 
-                task.wait()
                 Items["Page"].Instance.Visible = true
 
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
@@ -2844,7 +2843,6 @@ local Library do
             Debounce = true
 
             if Bool then 
-                task.wait()
                 Items["Subtab"].Instance.Visible = true
                 Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
                 Items["Hide"].Instance.Visible = true
