@@ -879,18 +879,25 @@ local Library do
         end
 
         self.ThemeMap[Item].Properties = Properties
-        self.ThemeMap[Item] = self.ThemeMap[Item]
+        
+        for Property, Value in Properties do
+            if type(Value) == "string" and self.Theme[Value] then
+                Item[Property] = self.Theme[Value]
+            end
+        end
     end
 
     Library.ChangeTheme = function(self, Theme, Color)
         self.Theme[Theme] = Color
 
-        for _, Item in self.ThemeItems do
-            for Property, Value in Item.Properties do
-                if type(Value) == "string" and Value == Theme then
-                    Item.Item[Property] = Color
+        for Index, Item in self.ThemeItems do
+            pcall(function()
+                for Property, Value in Item.Properties do
+                    if type(Value) == "string" and Value == Theme then
+                        Item.Item[Property] = Color
+                    end
                 end
-            end
+            end)
         end
     end
 
