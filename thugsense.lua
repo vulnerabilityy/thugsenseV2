@@ -2601,7 +2601,7 @@ local Library do
         local Debounce = false
 
         function Page:Turn(Bool)
-            if Debounce then 
+            if Debounce or Page.Active == Bool then 
                 return 
             end
 
@@ -2829,7 +2829,7 @@ local Library do
         local Debounce = false
 
         function SubPage:Turn(Bool)
-            if Debounce then return end
+            if Debounce or SubPage.Active == Bool then return end
 
             SubPage.Active = Bool
             Debounce = true
@@ -3171,7 +3171,7 @@ local Library do
             local Debounce = false
 
             function NewSection:Turn(Bool)
-                if Debounce then 
+                if Debounce or NewSection.Active == Bool then 
                     return 
                 end
 
