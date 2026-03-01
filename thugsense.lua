@@ -1770,7 +1770,7 @@ local Library do
 
         Library:Connect(UserInputService.InputBegan, function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) then
+                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) or Library:IsMouseOverFrame(Items["ColorpickerButton"]) then
                     return
                 end
 
@@ -4442,6 +4442,72 @@ local Library do
         end
 
         return Textbox
+    end
+    
+    Library.Sections.Colorpicker = function(self, Data)
+        Data = Data or { }
+
+        local Colorpicker = {
+            Window = self.Window,
+            Tab = self.Tab,
+            Section = self,
+
+            Name = Data.Name or Data.name or "Colorpicker",
+            Flag = Data.Flag or Data.flag or Library:NextFlag(),
+            Default = Data.Default or Data.default or Color3.fromRGB(255, 255, 255),
+            Callback = Data.Callback or Data.callback or function() end,
+            Alpha = Data.Alpha or Data.alpha or false,
+            Count = 0,
+            FadeSpeed = self.Window.FadeSpeed
+        }
+
+        local Items = { } do 
+            Items["Label"] = Instances:Create("Frame", {
+                Parent = Colorpicker.Section.Elements["Content"].Instance,
+                BackgroundTransparency = 1,
+                Name = "\0",
+                BorderColor3 = FromRGB(0, 0, 0),
+                Size = UDim2New(1, 0, 0, 15),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            }) 
+            
+            Items["Text"] = Instances:Create("TextLabel", {
+                Parent = Items["Label"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = Colorpicker.Name,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2New(1, 0, 1, 0),
+                BorderSizePixel = 0,
+                TextSize = 12,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
+            Instances:Create("UIStroke", {
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+                Parent = Items["Text"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+            }):AddToTheme({Color = "Text Border"})
+        end
+
+        local Extension = Library:CreateColorpicker({
+            Window = Colorpicker.Window,
+            Tab = Colorpicker.Tab,
+            Section = Colorpicker.Section,
+            Parent = Items["Label"],
+            Name = Colorpicker.Name,
+            Flag = Colorpicker.Flag,
+            Default = Colorpicker.Default,
+            Callback = Colorpicker.Callback,
+            Alpha = Colorpicker.Alpha,
+            Count = 0
+        })
+
+        return Extension
     end
     
     Library.Sections.Listbox = function(self, Data)
