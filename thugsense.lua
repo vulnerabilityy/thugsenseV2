@@ -1577,6 +1577,8 @@ local Library do
 
             Colorpicker.IsOpen = Bool
 
+            Debounce = true 
+
             if Bool then 
                 Items["ColorpickerWindow"].Instance.Visible = true
                 Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15)
@@ -1591,8 +1593,36 @@ local Library do
                 end
             else
                 Library.CurrentColorpicker = nil
-                Items["ColorpickerWindow"].Instance.Visible = false
             end
+
+            local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if not StringFind(Value.ClassName, "UI") then 
+                    Value.ZIndex = Bool and 10001 or 1
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed)
+                end
+            end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["ColorpickerWindow"].Instance.Visible = Bool
+            end)
         end
 
         function Colorpicker:Get()
@@ -1976,35 +2006,44 @@ local Library do
         local Debounce = false
 
         function Keybind:SetOpen(Bool)
+            if Debounce then 
+                return 
+            end
+
             Keybind.IsOpen = Bool
+            Debounce = true
 
             if Bool then 
                 Items["Window"].Instance.Visible = true
                 Items["Window"].Instance.ZIndex = 16
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 0})
-
-                for Index, Value in Items["Window"].Instance:GetDescendants() do 
-                    if Value:IsA("UIStroke") then
-                        Value.Transparency = 0
-                    elseif Value:IsA("TextButton") then
-                        Value.TextTransparency = 0
-                        Value.ZIndex = 16
-                    end
-                end
-            else 
-                Items["Window"].Instance.Visible = false
+            else
                 Items["Window"].Instance.ZIndex = 1
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 1})
+            end
 
-                for Index, Value in Items["Window"].Instance:GetDescendants() do 
-                    if Value:IsA("UIStroke") then
-                        Value.Transparency = 1
-                    elseif Value:IsA("TextButton") then
-                        Value.TextTransparency = 1
-                        Value.ZIndex = 1
+            local Descendants = Items["Window"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["Window"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed or 0.25)
                     end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed or 0.25)
                 end
             end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["Window"].Instance.Visible = Bool
+            end)
         end
 
         function Keybind:Set(Key)
@@ -2326,7 +2365,36 @@ local Library do
             end
 
             Window.IsOpen = Bool
-            Items["MainFrame"].Instance.Visible = Bool
+            Debounce = true
+
+            if Bool then 
+                Items["MainFrame"].Instance.Visible = true
+            end
+
+            local Descendants = Items["MainFrame"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["MainFrame"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Window.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Window.FadeSpeed)
+                end
+            end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["MainFrame"].Instance.Visible = Bool
+            end)
         end
 
         Library:Connect(UserInputService.InputBegan, function(Input, gp)
@@ -4153,6 +4221,7 @@ local Library do
             end
 
             Dropdown.IsOpen = Bool
+            Debounce = true
 
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
@@ -4160,10 +4229,34 @@ local Library do
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
-                Items["OptionHolder"].Instance.Visible = false
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
             end
+
+            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["OptionHolder"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, self.Window.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, self.Window.FadeSpeed)
+                end
+            end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["OptionHolder"].Instance.Visible = Bool
+            end)
         end
 
         for Index, Value in Dropdown.Items do 
