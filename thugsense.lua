@@ -2629,7 +2629,7 @@ local Library do
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
 
-            if not Page.FadeObjects then
+            if not Page.FadeObjects or #Page.FadeObjects == 0 then
                 Page.FadeObjects = {}
                 local Descendants = Items["Page"].Instance:GetDescendants()
                 TableInsert(Descendants, Items["Page"].Instance)
@@ -3196,7 +3196,7 @@ local Library do
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 end
 
-                if not NewSection.FadeObjects then
+                if not NewSection.FadeObjects or #NewSection.FadeObjects == 0 then
                     NewSection.FadeObjects = {}
                     local Descendants = SubItems["Content"].Instance:GetDescendants()
                     TableInsert(Descendants, SubItems["Content"].Instance)
