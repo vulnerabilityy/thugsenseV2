@@ -2006,43 +2006,44 @@ local Library do
         local Debounce = false
 
         function Keybind:SetOpen(Bool)
-            Keybind.IsOpen = Bool
-
-            if Bool then 
-                Debounce = true
-                Items["Window"].Instance.Visible = true
-                Items["Window"].Instance.ZIndex = 16
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 0})
-
-                task.wait(0.1)
-
-                for Index, Value in Items["Window"].Instance:GetDescendants() do 
-                    if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 0}, true)
-                    elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 0}, true)
-                        Value.ZIndex = 16
-                    end
-                end
-            else 
-                for Index, Value in Items["Window"].Instance:GetDescendants() do 
-                    if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 1}, true)
-                    elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 1}, true)
-                        Value.ZIndex = 1
-                    end
-                end
-
-                task.wait(0.1)
-
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 1})
-                Items["Window"].Instance.ZIndex = 1
-                task.wait(0.1)
-                Items["Window"].Instance.Visible = false
+            if Debounce then 
+                return 
             end
 
-            Debounce = false
+            Keybind.IsOpen = Bool
+            Debounce = true
+
+            if Bool then 
+                Items["Window"].Instance.Visible = true
+                Items["Window"].Instance.ZIndex = 16
+            else
+                Items["Window"].Instance.ZIndex = 1
+            end
+
+            local Descendants = Items["Window"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["Window"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed or 0.25)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed or 0.25)
+                end
+            end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["Window"].Instance.Visible = Bool
+            end)
         end
 
         function Keybind:Set(Key)
@@ -2601,15 +2602,14 @@ local Library do
         local Debounce = false
 
         function Page:Turn(Bool)
-            if Debounce or Page.Active == Bool then 
+            if Debounce then 
                 return 
             end
 
             Page.Active = Bool
 
-            Debounce = true 
-
             if Bool then 
+                task.wait()
                 Items["Page"].Instance.Visible = true
 
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
@@ -2619,34 +2619,10 @@ local Library do
             else
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
                 Items["Hide"].Instance.Visible = false
+                Items["Page"].Instance.Visible = false
 
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
-
-            local Descendants = Items["Page"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["Page"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Page.Window.FadeSpeed or 0.5)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Page.Window.FadeSpeed or 0.5)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["Page"].Instance.Visible = Bool
-            end)
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
@@ -2829,12 +2805,13 @@ local Library do
         local Debounce = false
 
         function SubPage:Turn(Bool)
-            if Debounce or SubPage.Active == Bool then return end
+            if Debounce then return end
 
             SubPage.Active = Bool
             Debounce = true
 
             if Bool then 
+                task.wait()
                 Items["Subtab"].Instance.Visible = true
                 Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
                 Items["Hide"].Instance.Visible = true
@@ -2847,11 +2824,7 @@ local Library do
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
             end
 
-            for _, obj in Items["Subtab"].Instance:GetDescendants() do
-                if obj:IsA("GuiObject") then
-                    obj.Visible = Bool
-                end
-            end
+            Items["Subtab"].Instance.Visible = Bool
 
             Debounce = false
         end
@@ -3171,13 +3144,11 @@ local Library do
             local Debounce = false
 
             function NewSection:Turn(Bool)
-                if Debounce or NewSection.Active == Bool then 
+                if Debounce then 
                     return 
                 end
 
                 NewSection.Active = Bool
-
-                Debounce = true 
 
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
@@ -3187,34 +3158,10 @@ local Library do
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
                     SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                    SubItems["Content"].Instance.Visible = false
 
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 end
-
-                local Descendants = SubItems["Content"].Instance:GetDescendants()
-                TableInsert(Descendants, SubItems["Content"].Instance)
-
-                local NewTween
-                for Index, Value in Descendants do 
-                    local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                    if not ValueIndex then 
-                        continue
-                    end
-
-                    if type(ValueIndex) == "table" then
-                        for _, Property in ValueIndex do 
-                            NewTween = Library:FadeItem(Value, Property, Bool, MultiSection.Window.FadeSpeed or 0.5)
-                        end
-                    else
-                        NewTween = Library:FadeItem(Value, ValueIndex, Bool, MultiSection.Window.FadeSpeed or 0.5)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                    SubItems["Content"].Instance.Visible = Bool
-                end)
             end
 
             SubItems["Inactive"]:Connect("MouseButton1Down", function()
