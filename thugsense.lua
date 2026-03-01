@@ -2645,15 +2645,7 @@ local Library do
                 NewTween = Library:FadeItem(Data.Instance, Data.Properties, Bool, Page.Window.FadeSpeed or 0.5)
             end
 
-            if NewTween then
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                    Items["Page"].Instance.Visible = Bool
-                end)
-            else
-                Debounce = false
-                Items["Page"].Instance.Visible = Bool
-            end
+            Debounce = false
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
@@ -3211,15 +3203,7 @@ local Library do
                     NewTween = Library:FadeItem(Data.Instance, Data.Properties, Bool, MultiSection.Window.FadeSpeed or 0.5)
                 end
 
-                if NewTween then
-                    Library:Connect(NewTween.Tween.Completed, function()
-                        Debounce = false
-                        SubItems["Content"].Instance.Visible = Bool
-                    end)
-                else
-                    Debounce = false
-                    SubItems["Content"].Instance.Visible = Bool
-                end
+                Debounce = false
             end
 
             SubItems["Inactive"]:Connect("MouseButton1Down", function()
