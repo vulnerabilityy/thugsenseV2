@@ -2601,11 +2601,11 @@ local Library do
         local Debounce = false
 
         function Page:Turn(Bool)
-            if Debounce or Page.Active == Bool then 
+            if Debounce or self.Active == Bool then 
                 return 
             end
 
-            Page.Active = Bool
+            self.Active = Bool
 
             Debounce = true 
 
@@ -2650,6 +2650,8 @@ local Library do
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
+            if self.Active then return end 
+
             for Index, Value in Page.Window.Pages do
                 Value:Turn(Value == Page)
             end
@@ -2829,9 +2831,9 @@ local Library do
         local Debounce = false
 
         function SubPage:Turn(Bool)
-            if Debounce or SubPage.Active == Bool then return end
+            if Debounce or self.Active == Bool then return end
 
-            SubPage.Active = Bool
+            self.Active = Bool
             Debounce = true
 
             if Bool then 
@@ -2857,6 +2859,8 @@ local Library do
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
+            if self.Active then return end
+
             for Index, Value in SubPage.Window.SubPages do
                 Value:Turn(Value == SubPage)
             end
@@ -3171,11 +3175,11 @@ local Library do
             local Debounce = false
 
             function NewSection:Turn(Bool)
-                if Debounce or NewSection.Active == Bool then 
+                if Debounce or self.Active == Bool then 
                     return 
                 end
 
-                NewSection.Active = Bool
+                self.Active = Bool
 
                 Debounce = true 
 
@@ -3218,6 +3222,8 @@ local Library do
             end
 
             SubItems["Inactive"]:Connect("MouseButton1Down", function()
+                if self.Active then return end
+
                 for Index, Value in MultiSection.SectionContents do
                     Value:Turn(Value == NewSection)
                 end
