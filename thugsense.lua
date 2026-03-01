@@ -484,7 +484,7 @@ local Library do
             end
 
             self.Instance:Destroy()
-            self = nil
+            self.Instance = nil
         end
 
         Instances.MakeDraggable = function(self)
@@ -725,7 +725,6 @@ local Library do
             self.Holder:Clean()
         end
 
-        Library = nil 
         getgenv().Library = nil
     end
 
@@ -761,12 +760,8 @@ local Library do
             Event = Event,
             Callback = Callback,
             Name = Name,
-            Connection = nil
+            Connection = Event:Connect(Callback)
         }
-
-        Library:Thread(function()
-            NewConnection.Connection = Event:Connect(Callback)
-        end)
 
         TableInsert(self.Connections, NewConnection)
         return NewConnection
@@ -856,8 +851,8 @@ local Library do
     end
 
     Library.SaveConfig = function(self, Config)
-        if isfile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json") then
-            writefile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
+        if isfile(Library.Folders.Configs .. "/" .. Config .. ".json") then
+            writefile(Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
             Library:Notification("Saved config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
         end
     end
@@ -870,22 +865,10 @@ local Library do
 
         for Index, Value in listfiles(Library.Folders.Configs) do
             local FileName = StringGSub(Value, Library.Folders.Directory .. "\\" .. ConfigFolderName .. "\\", "")
-            List[Index] = FileName
+            TableInsert(List, FileName)
         end
 
-        local IsNew = #List ~= CurrentList
-
-        if not IsNew then
-            for Index = 1, #List do
-                if List[Index] ~= CurrentList[Index] then
-                    IsNew = true
-                    break
-                end
-            end
-        else
-            CurrentList = List
-            Element:Refresh(CurrentList)
-        end
+        Element:Refresh(List)
     end
 
     Library.ChangeItemTheme = function(self, Item, Properties)
@@ -896,18 +879,25 @@ local Library do
         end
 
         self.ThemeMap[Item].Properties = Properties
-        self.ThemeMap[Item] = self.ThemeMap[Item]
+        
+        for Property, Value in Properties do
+            if type(Value) == "string" and self.Theme[Value] then
+                Item[Property] = self.Theme[Value]
+            end
+        end
     end
 
     Library.ChangeTheme = function(self, Theme, Color)
         self.Theme[Theme] = Color
 
-        for _, Item in self.ThemeItems do
-            for Property, Value in Item.Properties do
-                if type(Value) == "string" and Value == Theme then
-                    Item.Item[Property] = Color
+        for Index, Item in self.ThemeItems do
+            pcall(function()
+                for Property, Value in Item.Properties do
+                    if type(Value) == "string" and Value == Theme then
+                        Item.Item[Property] = Color
+                    end
                 end
-            end
+            end)
         end
     end
 
@@ -1110,40 +1100,27 @@ local Library do
         end
 
         Library:Thread(function()
-            Items["Notification"]:Tween(nil, {BackgroundTransparency = 0, Size = UDim2New(0, 0, 0, 22)})
+            Items["Notification"]:Tween(nil, {BackgroundTransparency = 0.1, Size = UDim2New(0, 0, 0, 22)})
             
             task.wait(0.06)
 
             for Index, Value in Items["Notification"].Instance:GetDescendants() do
                 if Value:IsA("UIStroke") then
-                    Tween:Create(Value, nil, {Transparency = 0}, true)
+                    Value.Transparency = 0
                 elseif Value:IsA("TextLabel") then
-                    Tween:Create(Value, nil, {TextTransparency = 0}, true)
+                    Value.TextTransparency = 0
                 elseif Value:IsA("ImageLabel") then
-                    Tween:Create(Value, nil, {ImageTransparency = 0}, true)
+                    Value.ImageTransparency = 0
                 elseif Value:IsA("Frame") then
-                    Tween:Create(Value, nil, {BackgroundTransparency = 0}, true)
+                    Value.BackgroundTransparency = 0
                 end
             end
 
-            task.delay(Duration + 0.1, function()
-                for Index, Value in Items["Notification"].Instance:GetDescendants() do
-                    if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 1}, true)
-                    elseif Value:IsA("TextLabel") then
-                        Tween:Create(Value, nil, {TextTransparency = 1}, true)
-                    elseif Value:IsA("ImageLabel") then
-                        Tween:Create(Value, nil, {ImageTransparency = 1}, true)
-                    elseif Value:IsA("Frame") then
-                        Tween:Create(Value, nil, {BackgroundTransparency = 1}, true)
-                    end
-                end
-
-                task.wait(0.06)
-
+            task.delay(Duration, function()
+                if not Items["Notification"] or not Items["Notification"].Instance then return end
                 Items["Notification"]:Tween(nil, {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
 
-                task.wait(0.5)
+                task.wait(0.1)
                 Items["Notification"]:Clean()
             end)
         end)
@@ -1600,8 +1577,6 @@ local Library do
 
             Colorpicker.IsOpen = Bool
 
-            Debounce = true 
-
             if Bool then 
                 Items["ColorpickerWindow"].Instance.Visible = true
                 Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15)
@@ -1616,36 +1591,8 @@ local Library do
                 end
             else
                 Library.CurrentColorpicker = nil
+                Items["ColorpickerWindow"].Instance.Visible = false
             end
-
-            local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if not StringFind(Value.ClassName, "UI") then 
-                    Value.ZIndex = Bool and 10001 or 1
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["ColorpickerWindow"].Instance.Visible = Bool
-            end)
         end
 
         function Colorpicker:Get()
@@ -1823,7 +1770,7 @@ local Library do
 
         Library:Connect(UserInputService.InputBegan, function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) then
+                if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) or Library:IsMouseOverFrame(Items["ColorpickerButton"]) then
                     return
                 end
 
@@ -2032,49 +1979,40 @@ local Library do
             Keybind.IsOpen = Bool
 
             if Bool then 
-                Debounce = true
                 Items["Window"].Instance.Visible = true
                 Items["Window"].Instance.ZIndex = 16
                 Items["Window"]:Tween(nil, {BackgroundTransparency = 0})
 
-                task.wait(0.1)
-
                 for Index, Value in Items["Window"].Instance:GetDescendants() do 
                     if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 0}, true)
+                        Value.Transparency = 0
                     elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 0}, true)
+                        Value.TextTransparency = 0
                         Value.ZIndex = 16
                     end
                 end
             else 
+                Items["Window"].Instance.Visible = false
+                Items["Window"].Instance.ZIndex = 1
+                Items["Window"]:Tween(nil, {BackgroundTransparency = 1})
+
                 for Index, Value in Items["Window"].Instance:GetDescendants() do 
                     if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 1}, true)
+                        Value.Transparency = 1
                     elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 1}, true)
+                        Value.TextTransparency = 1
                         Value.ZIndex = 1
                     end
                 end
-
-                task.wait(0.1)
-
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 1})
-                Items["Window"].Instance.ZIndex = 1
-                task.wait(0.1)
-                Items["Window"].Instance.Visible = false
             end
-
-            Debounce = false
         end
 
         function Keybind:Set(Key)
             if StringFind(tostring(Key), "Enum") then 
                 Keybind.Key = tostring(Key)
 
-                Key = Key.Name == "Backspace" and " " or Key.Name
-
-                local KeyString = Keys[Keybind.Key] or StringGSub(Key, "Enum.", "") or "Empty"
+                local KeyName = Key.Name
+                local KeyString = Keys[KeyName] or KeyName or "Empty"
                 local TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
 
                 Keybind.Value = TextToDisplay
@@ -2091,9 +2029,9 @@ local Library do
                 if Data.Callback then 
                     Library:SafeCall(Data.Callback, Keybind.Toggled)
                 end
-            elseif type(Key) == "table" then 
-                local RealKey = Key.Key == "Backspace" and " " or Key.Key
-                Keybind.Key = tostring(Key.Key)
+                local RealKeyEnum = Key.Key
+                local KeyName = RealKeyEnum.Name
+                Keybind.Key = tostring(RealKeyEnum)
 
                 if Key.Mode then
                     Keybind.Mode = Key.Mode
@@ -2103,10 +2041,8 @@ local Library do
                     Keybind:SetMode("Toggle")
                 end
 
-                local KeyString = Keys[Keybind.Key] or StringGSub(tostring(RealKey), "Enum.", "") or RealKey
-                local TextToDisplay = KeyString and StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
-
-                TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "")
+                local KeyString = Keys[KeyName] or KeyName or "Empty"
+                local TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
 
                 Keybind.Value = TextToDisplay
                 Items["Text"].Instance.Text = TextToDisplay
@@ -2175,7 +2111,7 @@ local Library do
             Update()
         end
 
-        Items["KeyButton"]:Connect("MouseButton1Click", function()
+        Items["KeyButton"]:Connect("MouseButton1Down", function()
             if Keybind.Picking then 
                 return
             end
@@ -2390,37 +2326,7 @@ local Library do
             end
 
             Window.IsOpen = Bool
-
-            Debounce = true 
-
-            if Bool then 
-                Items["MainFrame"].Instance.Visible = true
-            end
-
-            local Descendants = Items["MainFrame"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["MainFrame"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Window.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Window.FadeSpeed)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["MainFrame"].Instance.Visible = Bool
-            end)
+            Items["MainFrame"].Instance.Visible = Bool
         end
 
         Library:Connect(UserInputService.InputBegan, function(Input, gp)
@@ -2634,9 +2540,8 @@ local Library do
 
             Page.Active = Bool
 
-            Debounce = true 
-
             if Bool then 
+                task.wait()
                 Items["Page"].Instance.Visible = true
 
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
@@ -2646,34 +2551,10 @@ local Library do
             else
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
                 Items["Hide"].Instance.Visible = false
+                Items["Page"].Instance.Visible = false
 
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
-
-            local Descendants = Items["Page"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["Page"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Page.Window.FadeSpeed or 0.5)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Page.Window.FadeSpeed or 0.5)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["Page"].Instance.Visible = Bool
-            end)
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
@@ -2862,6 +2743,7 @@ local Library do
             Debounce = true
 
             if Bool then 
+                task.wait()
                 Items["Subtab"].Instance.Visible = true
                 Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
                 Items["Hide"].Instance.Visible = true
@@ -2874,11 +2756,7 @@ local Library do
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
             end
 
-            for _, obj in Items["Subtab"].Instance:GetDescendants() do
-                if obj:IsA("GuiObject") then
-                    obj.Visible = Bool
-                end
-            end
+            Items["Subtab"].Instance.Visible = Bool
 
             Debounce = false
         end
@@ -3204,8 +3082,6 @@ local Library do
 
                 NewSection.Active = Bool
 
-                Debounce = true 
-
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
 
@@ -3214,34 +3090,10 @@ local Library do
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
                     SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                    SubItems["Content"].Instance.Visible = false
 
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 end
-
-                local Descendants = SubItems["Content"].Instance:GetDescendants()
-                TableInsert(Descendants, SubItems["Content"].Instance)
-
-                local NewTween
-                for Index, Value in Descendants do 
-                    local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                    if not ValueIndex then 
-                        continue
-                    end
-
-                    if type(ValueIndex) == "table" then
-                        for _, Property in ValueIndex do 
-                            NewTween = Library:FadeItem(Value, Property, Bool, MultiSection.Window.FadeSpeed or 0.5)
-                        end
-                    else
-                        NewTween = Library:FadeItem(Value, ValueIndex, Bool, MultiSection.Window.FadeSpeed or 0.5)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                    SubItems["Content"].Instance.Visible = Bool
-                end)
             end
 
             SubItems["Inactive"]:Connect("MouseButton1Down", function()
@@ -4302,47 +4154,16 @@ local Library do
 
             Dropdown.IsOpen = Bool
 
-            Debounce = true 
-
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
                 Items["OptionHolder"].Instance.ZIndex = 15
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
+                Items["OptionHolder"].Instance.Visible = false
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
             end
-
-            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["OptionHolder"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if not StringFind(Value.ClassName, "UI") then 
-                    Value.ZIndex = Bool and 15 or 1
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Dropdown.Window.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Dropdown.Window.FadeSpeed)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["OptionHolder"].Instance.Visible = Bool
-                Items["OptionHolder"].Instance.ZIndex = Bool and 15 or 1
-            end)
         end
 
         for Index, Value in Dropdown.Items do 
@@ -4620,6 +4441,72 @@ local Library do
         end
 
         return Textbox
+    end
+    
+    Library.Sections.Colorpicker = function(self, Data)
+        Data = Data or { }
+
+        local Colorpicker = {
+            Window = self.Window,
+            Tab = self.Tab,
+            Section = self,
+
+            Name = Data.Name or Data.name or "Colorpicker",
+            Flag = Data.Flag or Data.flag or Library:NextFlag(),
+            Default = Data.Default or Data.default or Color3.fromRGB(255, 255, 255),
+            Callback = Data.Callback or Data.callback or function() end,
+            Alpha = Data.Alpha or Data.alpha or false,
+            Count = 0,
+            FadeSpeed = self.Window.FadeSpeed
+        }
+
+        local Items = { } do 
+            Items["Label"] = Instances:Create("Frame", {
+                Parent = Colorpicker.Section.Elements["Content"].Instance,
+                BackgroundTransparency = 1,
+                Name = "\0",
+                BorderColor3 = FromRGB(0, 0, 0),
+                Size = UDim2New(1, 0, 0, 15),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            }) 
+            
+            Items["Text"] = Instances:Create("TextLabel", {
+                Parent = Items["Label"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = Colorpicker.Name,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2New(1, 0, 1, 0),
+                BorderSizePixel = 0,
+                TextSize = 12,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
+            Instances:Create("UIStroke", {
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+                Parent = Items["Text"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+            }):AddToTheme({Color = "Text Border"})
+        end
+
+        local Extension = Library:CreateColorpicker({
+            Window = Colorpicker.Window,
+            Tab = Colorpicker.Tab,
+            Section = Colorpicker.Section,
+            Parent = Items["Label"],
+            Name = Colorpicker.Name,
+            Flag = Colorpicker.Flag,
+            Default = Colorpicker.Default,
+            Callback = Colorpicker.Callback,
+            Alpha = Colorpicker.Alpha,
+            Count = 0
+        })
+
+        return Extension
     end
     
     Library.Sections.Listbox = function(self, Data)
