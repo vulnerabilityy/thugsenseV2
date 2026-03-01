@@ -484,7 +484,7 @@ local Library do
             end
 
             self.Instance:Destroy()
-            self = nil
+            self.Instance = nil
         end
 
         Instances.MakeDraggable = function(self)
@@ -725,7 +725,6 @@ local Library do
             self.Holder:Clean()
         end
 
-        Library = nil 
         getgenv().Library = nil
     end
 
@@ -852,8 +851,8 @@ local Library do
     end
 
     Library.SaveConfig = function(self, Config)
-        if isfile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json") then
-            writefile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
+        if isfile(Library.Folders.Configs .. "/" .. Config .. ".json") then
+            writefile(Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
             Library:Notification("Saved config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
         end
     end
