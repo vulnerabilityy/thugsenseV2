@@ -469,11 +469,13 @@ local Library do
         end
 
         Instances.Tween = function(self, Info, Goal)
-            if not self.Instance then 
+            if not self or not self.Instance then 
                 return
             end
 
-            return Tween:Create(self, Info, Goal)
+            local NewTween = Tween:Create(self.Instance, Info or TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), Goal)
+            NewTween:Play()
+            return NewTween
         end
 
         Instances.Disconnect = function(self, Name)
@@ -3909,22 +3911,39 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"}) 
             
-            Items["Value"] = Instances:Create("TextLabel", {
-                Parent = Items["RealDropdown"].Instance,
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(215, 215, 215),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = "--",
-                Name = "\0",
-                Size = UDim2New(1, -25, 1, 0),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                Position = UDim2New(0, 5, 0, -1),
-                BorderSizePixel = 0,
-                TextSize = 12,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
+        local function ToggleOpen()
+            Dropdown:SetOpen(not Dropdown.IsOpen)
+        end
+
+        Items["Open"]:Connect("MouseButton1Down", ToggleOpen)
+        
+        -- Make the background box clickable too
+        local CaptureButton = Instances:Create("TextButton", {
+            Parent = Items["RealDropdown"].Instance,
+            Size = UDim2New(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "",
+            Name = "\0",
+            ZIndex = 2
+        })
+        CaptureButton:Connect("MouseButton1Down", ToggleOpen)
+
+        Items["Value"] = Instances:Create("TextLabel", {
+            Parent = Items["RealDropdown"].Instance,
+            FontFace = Library.Font,
+            TextColor3 = FromRGB(215, 215, 215),
+            BorderColor3 = FromRGB(0, 0, 0),
+            Text = "--",
+            Name = "\0",
+            Size = UDim2New(1, -25, 1, 0),
+            BackgroundTransparency = 1,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            Position = UDim2New(0, 5, 0, -1),
+            BorderSizePixel = 0,
+            TextSize = 12,
+            BackgroundColor3 = FromRGB(255, 255, 255)
+        })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
             
             Instances:Create("UIStroke", {
                 Parent = Items["Value"].Instance,
@@ -3933,13 +3952,13 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Items["Dropdown"].Instance,
+                Parent = Library.Holder.Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
-                Position = UDim2New(0, 0, 1, 5),
                 Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
+                ZIndex = 15,
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
@@ -4084,11 +4103,13 @@ local Library do
 
             function OptionData:Toggle(State)
                 if State == "Active" then 
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
+                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 else
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
+                    OptionData.Text.Instance.TextTransparency = 0.48
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
                 end
             end
 
@@ -4174,8 +4195,13 @@ local Library do
             Debounce = true
 
             if Bool then 
+                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
+                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
+                
+                Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 5)
+                Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 15
+                
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
@@ -4191,9 +4217,7 @@ local Library do
             Dropdown:Add(Value)
         end
 
-        Items["Open"]:Connect("MouseButton1Down", function()
-            Dropdown:SetOpen(not Dropdown.IsOpen)
-        end)
+        -- Already connected via CaptureButton and Open button
 
         if Dropdown.Default then 
             Dropdown:Set(Dropdown.Default)
