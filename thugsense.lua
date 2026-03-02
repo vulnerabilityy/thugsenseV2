@@ -2541,13 +2541,11 @@ local Library do
 
             if Bool then 
                 Items["Page"].Instance.Visible = true
-                Items["Text"].Instance.TextColor3 = Library.Theme.Accent
-                Items["Text"].Instance.TextTransparency = 0
+                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 Items["Hide"].Instance.Visible = true
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             else
-                Items["Text"].Instance.TextColor3 = Library.Theme.Text
-                Items["Text"].Instance.TextTransparency = 0.5
+                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
                 Items["Hide"].Instance.Visible = false
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 Items["Page"].Instance.Visible = false
@@ -2731,8 +2729,6 @@ local Library do
 
                 SubPage.ColumnsData[Index] = NewColumn
             end
-        end
-
         local Debounce = false
 
         function SubPage:Turn(Bool)
@@ -2745,14 +2741,12 @@ local Library do
 
             if Bool then 
                 Items["Subtab"].Instance.Visible = true
-                Items["Icon"].Instance.ImageColor3 = Library.Theme.Accent
-                Items["Icon"].Instance.ImageTransparency = 0
+                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
                 Items["Hide"].Instance.Visible = true
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, 1)
             else
-                Items["Icon"].Instance.ImageColor3 = Library.Theme.Text
-                Items["Icon"].Instance.ImageTransparency = 0.35
+                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.35})
                 Items["Hide"].Instance.Visible = false
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
@@ -3086,12 +3080,10 @@ local Library do
 
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
-                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Accent
-                    SubItems["Text"].Instance.TextTransparency = 0
+                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
-                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Text
-                    SubItems["Text"].Instance.TextTransparency = 0.5
+                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                     SubItems["Content"].Instance.Visible = false
                 end
@@ -3822,11 +3814,9 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, 0, 0, 34),
                 BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255),
-                ClipsDescendants = false
+                BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
             
-            Items["Dropdown"].Instance.ZIndex = 5            
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Dropdown"].Instance,
                 FontFace = Library.Font,
