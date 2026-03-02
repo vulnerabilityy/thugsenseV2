@@ -4031,7 +4031,7 @@ local Library do
                 Parent = OptionButton.Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
-                TextTransparency = 0,
+                TextTransparency = 0.48,
                 Text = Option,
                 Name = "\0",
                 BorderColor3 = FromRGB(0, 0, 0),
