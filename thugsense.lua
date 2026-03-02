@@ -706,16 +706,17 @@ local Library do
 
         local NewTween = Tween:Create(Item, TweenInfo.new(Speed or Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
             [Property] = Visibility and OldTransparency or 1
-        }, true)
+        })
+        NewTween:Play()
 
-        Library:Connect(NewTween.Tween.Completed, function()
+        Library:Connect(NewTween.Completed, function()
             if not Visibility then 
                 task.wait()
                 Item[Property] = OldTransparency
             end
         end)
 
-        return NewTween
+        return { Tween = NewTween }
     end)
 
     Library.Unload = function(self)
