@@ -694,22 +694,18 @@ local Library do
         end
     end
 
-    Library.FadeItem = function(self, Item, Properties, Visibility, Speed)
-        local Goals = {}
-        local Originals = {}
-        for _, Property in (type(Properties) == "table" and Properties or {Properties}) do
-            Originals[Property] = Item[Property]
-            Item[Property] = Visibility and 1 or Item[Property]
-            Goals[Property] = Visibility and Originals[Property] or 1
-        end
+    Library.FadeItem = function(self, Item, Property, Visibility, Speed)
+        local OldTransparency = Item[Property]
+        Item[Property] = Visibility and 1 or OldTransparency
 
-        local NewTween = Tween:Create(Item, TweenInfo.new(Speed or Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), Goals, true)
+        local NewTween = Tween:Create(Item, TweenInfo.new(Speed or Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+            [Property] = Visibility and OldTransparency or 1
+        }, true)
 
         Library:Connect(NewTween.Tween.Completed, function()
             if not Visibility then 
-                for Property, Value in Originals do
-                    Item[Property] = Value 
-                end
+                task.wait()
+                Item[Property] = OldTransparency
             end
         end)
 
@@ -2627,25 +2623,30 @@ local Library do
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
 
-            if Page.FadeObjects == nil then
-                Page.FadeObjects = {}
-                local Descendants = Items["Page"].Instance:GetDescendants()
-                TableInsert(Descendants, Items["Page"].Instance)
+            local Descendants = Items["Page"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["Page"].Instance)
 
-                for _, Value in Descendants do
-                    local Properties = Library:GetTransparencyPropertyFromItem(Value)
-                    if Properties then
-                        TableInsert(Page.FadeObjects, { Instance = Value, Properties = Properties })
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Page.Window.FadeSpeed or 0.5)
                     end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Page.Window.FadeSpeed or 0.5)
                 end
             end
 
-            local NewTween
-            for _, Data in Page.FadeObjects do
-                NewTween = Library:FadeItem(Data.Instance, Data.Properties, Bool, Page.Window.FadeSpeed or 0.5)
-            end
-
-            Debounce = false
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["Page"].Instance.Visible = Bool
+            end)
         end
 
         Items["Inactive"]:Connect("MouseButton1Down", function()
@@ -2846,7 +2847,12 @@ local Library do
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
             end
 
-            Items["Subtab"].Instance.Visible = Bool
+            for _, obj in Items["Subtab"].Instance:GetDescendants() do
+                if obj:IsA("GuiObject") then
+                    obj.Visible = Bool
+                end
+            end
+
             Debounce = false
         end
 
