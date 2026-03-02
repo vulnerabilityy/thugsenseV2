@@ -3918,8 +3918,7 @@ local Library do
                 Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
                 AutomaticSize = Enum.AutomaticSize.Y,
-                BackgroundColor3 = FromRGB(20, 20, 25),
-                ClipsDescendants = false
+                BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
             
             Instances:Create("UIStroke", {
@@ -4146,21 +4145,25 @@ local Library do
         local Debounce = false
 
         function Dropdown:SetOpen(Bool)
+            if Debounce then 
+                return 
+            end
+
             Dropdown.IsOpen = Bool
+            Debounce = true
 
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 100
+                Items["OptionHolder"].Instance.ZIndex = 15
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
-                
-                -- Force a layout update
-                Items["OptionHolder"].Instance.Size = UDim2New(1, 0, 0, 1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
                 Items["OptionHolder"].Instance.Visible = false
             end
+
+            Debounce = false
         end
 
         for Index, Value in Dropdown.Items do 
