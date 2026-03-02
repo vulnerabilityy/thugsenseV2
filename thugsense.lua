@@ -461,11 +461,15 @@ local Library do
                 return
             end
 
-            if not self.Instance[Event] then 
+            local Success, EventObject = pcall(function()
+                return self.Instance[Event]
+            end)
+
+            if not Success or not EventObject then 
                 return
             end
 
-            return Library:Connect(self.Instance[Event], Callback, Name)
+            return Library:Connect(EventObject, Callback, Name)
         end
 
         Instances.Tween = function(self, Info, Goal)
@@ -3839,16 +3843,7 @@ local Library do
                 Size = UDim2New(1, 0, 0, 13),
                 BorderSizePixel = 0,
                 TextSize = 12,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
-
-            Instances:Create("UIStroke", {
-                Parent = Items["Text"].Instance,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Name = "\0"
-            }):AddToTheme({Color = "Text Border"})
-            
-            Items["RealDropdown"] = Instances:Create("Frame", {
+            Items["RealDropdown"] = Instances:Create("TextButton", {
                 Parent = Items["Dropdown"].Instance,
                 AnchorPoint = Vector2New(0, 1),
                 Name = "\0",
@@ -3856,7 +3851,9 @@ local Library do
                 BorderColor3 = FromRGB(10, 10, 10),
                 Size = UDim2New(1, 0, 0, 17),
                 BorderSizePixel = 2,
-                BackgroundColor3 = FromRGB(33, 33, 36)
+                BackgroundColor3 = FromRGB(33, 33, 36),
+                Text = "",
+                AutoButtonColor = false
             })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
             
             Instances:Create("UIGradient", {
