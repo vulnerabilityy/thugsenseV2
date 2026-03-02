@@ -646,8 +646,7 @@ local Library do
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = gethui(),
         Name = "\0",
-        ResetOnSpawn = false,
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        ResetOnSpawn = false
     })
 
     Library.NotifHolder = Instances:Create("Frame", {
@@ -4135,7 +4134,7 @@ local Library do
                 end
 
                 if Dropdown.Callback then 
-                    Library:SafeCall(Dropdown.Callback, Dropdown.Value)
+                    Library:SafeCall(Dropdown.Callback, Dropdown.Value or Dropdown.Value)
                 end
             end
 
