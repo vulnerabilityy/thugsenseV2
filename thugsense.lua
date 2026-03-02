@@ -646,7 +646,8 @@ local Library do
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = gethui(),
         Name = "\0",
-        ResetOnSpawn = false
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Global
     })
 
     Library.NotifHolder = Instances:Create("Frame", {
