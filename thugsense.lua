@@ -740,10 +740,15 @@ local Library do
     end
     
     Library.SafeCall = function(self, Function, ...)
-        local Success, Result = pcall(Function, ...)
+        local Arguements = { ... }
+        local Success, Result = pcall(Function, TableUnpack(Arguements))
+
         if not Success then
+            Library:Notification("Error caught in function, report this to the devs:\n"..Result, 5, FromRGB(255, 0, 0))
             warn(Result)
+            return false
         end
+
         return Success
     end
 
@@ -882,14 +887,13 @@ local Library do
     end
     Library.ChangeTheme = function(self, Theme, Color)
         self.Theme[Theme] = Color
-        local ThemeMap = self.ThemeItems
-        for i = 1, #ThemeMap do
-            local Item = ThemeMap[i]
+
+        for Index, Item in self.ThemeItems do
             local Instance = Item.Item
             if Instance then
                 for Property, Value in Item.Properties do
-                    if Value == Theme then
-                        Instance[Property] = Color
+                    if type(Value) == "string" and self.Theme[Value] then
+                        Instance[Property] = self.Theme[Value]
                     end
                 end
             end
@@ -2538,17 +2542,23 @@ local Library do
             end
 
             Page.Active = Bool
+
             Debounce = true 
 
             if Bool then 
                 Items["Page"].Instance.Visible = true
+
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 Items["Hide"].Instance.Visible = true
+
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             else
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
                 Items["Hide"].Instance.Visible = false
+
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
+            end
+            if not Bool then
                 Items["Page"].Instance.Visible = false
             end
 
@@ -2730,12 +2740,12 @@ local Library do
 
                 SubPage.ColumnsData[Index] = NewColumn
             end
+        end
+
         local Debounce = false
 
         function SubPage:Turn(Bool)
-            if Debounce then 
-                return 
-            end
+            if Debounce then return end
 
             SubPage.Active = Bool
             Debounce = true
@@ -2751,7 +2761,12 @@ local Library do
                 Items["Hide"].Instance.Visible = false
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
-                Items["Subtab"].Instance.Visible = false
+            end
+
+            for _, obj in Items["Subtab"].Instance:GetDescendants() do
+                if obj:IsA("GuiObject") then
+                    obj.Visible = Bool
+                end
             end
 
             Debounce = false
@@ -3077,15 +3092,22 @@ local Library do
                 end
 
                 NewSection.Active = Bool
+
                 Debounce = true 
 
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
+
                     SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
                     SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
+                end
+
+                if not Bool then
                     SubItems["Content"].Instance.Visible = false
                 end
 
