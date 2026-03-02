@@ -1593,11 +1593,34 @@ local Library do
                 Library.CurrentColorpicker = nil
             end
 
-            if not Bool then
-                Items["ColorpickerWindow"].Instance.Visible = false
+            local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if not StringFind(Value.ClassName, "UI") then 
+                    Value.ZIndex = Bool and 10001 or 1
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed)
+                end
             end
-            
-            Debounce = false
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["ColorpickerWindow"].Instance.Visible = Bool
+            end)
         end
 
         function Colorpicker:Get()
@@ -4189,11 +4212,30 @@ local Library do
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
             end
 
-            if not Bool then
-                Items["OptionHolder"].Instance.Visible = false
+            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["OptionHolder"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, self.Window.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, self.Window.FadeSpeed)
+                end
             end
 
-            Debounce = false
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["OptionHolder"].Instance.Visible = Bool
+            end)
         end
 
         for Index, Value in Dropdown.Items do 
