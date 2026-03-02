@@ -137,6 +137,12 @@
     function Library:KeybindList()
 ]]
 
+loadstring([[
+    function LPH_NO_VIRTUALIZE(f) return f end;
+    function LPH_JIT_MAX(f) return f end;
+    function LPH_NO_UPVALUES(f) return f end;
+]])()
+
 local LoadingTick = os.clock()
 
 if getgenv().Library then 
@@ -498,10 +504,10 @@ local Library do
             local DragStart
             local StartPosition 
 
-            local Set = function(Input)
+            local Set = LPH_NO_VIRTUALIZE(function(Input)
                 local DragDelta = Input.Position - DragStart
                 self:Tween(TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(StartPosition.X.Scale, StartPosition.X.Offset + DragDelta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + DragDelta.Y)})
-            end
+            end)
 
             self:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -518,13 +524,13 @@ local Library do
                 end
             end)
 
-            Library:Connect(UserInputService.InputChanged, function(Input)
+            Library:Connect(UserInputService.InputChanged, LPH_NO_VIRTUALIZE(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
                     if Dragging then
                         Set(Input)
                     end
                 end
-            end)
+            end))
 
             return Dragging
         end
@@ -569,7 +575,7 @@ local Library do
                 end
             end)
 
-            Library:Connect(UserInputService.InputChanged, function(Input)
+            Library:Connect(UserInputService.InputChanged, LPH_NO_VIRTUALIZE(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement and Resizing then
 					ResizeMax = Maximum or Gui.Parent.AbsoluteSize - Gui.AbsoluteSize
 
@@ -578,7 +584,7 @@ local Library do
 
 					Tween:Create(Gui, TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = Delta}, true)
                 end
-            end)
+            end))
 
             return Resizing
         end
@@ -678,7 +684,7 @@ local Library do
         return MathFloor(Number * Multiplier) / Multiplier
     end
 
-    Library.GetTransparencyPropertyFromItem = function(self, Item)
+    Library.GetTransparencyPropertyFromItem = LPH_NO_VIRTUALIZE(function(self, Item)
         if Item:IsA("Frame") then
             return { "BackgroundTransparency" }
         elseif Item:IsA("TextLabel") or Item:IsA("TextButton") then
@@ -692,9 +698,9 @@ local Library do
         elseif Item:IsA("UIStroke") then 
             return { "Transparency" }
         end
-    end
+    end)
 
-    Library.FadeItem = function(self, Item, Property, Visibility, Speed)
+    Library.FadeItem = LPH_NO_VIRTUALIZE(function(self, Item, Property, Visibility, Speed)
         local OldTransparency = Item[Property]
         Item[Property] = Visibility and 1 or OldTransparency
 
@@ -710,7 +716,7 @@ local Library do
         end)
 
         return NewTween
-    end
+    end)
 
     Library.Unload = function(self)
         for Index, Value in self.Connections do 
@@ -901,14 +907,14 @@ local Library do
         end
     end
 
-    Library.IsMouseOverFrame = function(self, Frame)
+    Library.IsMouseOverFrame = LPH_NO_VIRTUALIZE(function(self, Frame)
         Frame = Frame.Instance
 
         local MousePosition = Vector2New(Mouse.X, Mouse.Y)
 
         return MousePosition.X >= Frame.AbsolutePosition.X and MousePosition.X <= Frame.AbsolutePosition.X + Frame.AbsoluteSize.X 
         and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
-    end
+    end)
 
     Library.Watermark = function(self, Name)
         local Watermark = { } 
@@ -1782,7 +1788,7 @@ local Library do
             end
         end)
 
-        Library:Connect(UserInputService.InputChanged, function(Input)
+        Library:Connect(UserInputService.InputChanged, LPH_NO_VIRTUALIZE(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseMovement then
                 if SlidingPalette then
                     Colorpicker:SlidePalette(Input)
@@ -1796,9 +1802,9 @@ local Library do
                     Colorpicker:SlideAlpha(Input)
                 end
             end
-        end)
+        end))
 
-        Library:Connect(UserInputService.InputBegan, function(Input)
+        Library:Connect(UserInputService.InputBegan, LPH_NO_VIRTUALIZE(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                 if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) or Library:IsMouseOverFrame(Items["ColorpickerButton"]) then
                     return
@@ -1806,7 +1812,7 @@ local Library do
 
                 Colorpicker:SetOpen(false)
             end
-        end)
+        end))
 
         if Data.Default then 
             Colorpicker:Set(Data.Default, Data.Alpha)
@@ -2177,7 +2183,7 @@ local Library do
             Keybind:SetOpen(not Keybind.IsOpen)
         end)
 
-        Library:Connect(UserInputService.InputBegan, function(Input, gp)
+        Library:Connect(UserInputService.InputBegan, LPH_NO_VIRTUALIZE(function(Input, gp)
 			if gp then return end
             if tostring(Input.KeyCode) == Keybind.Key or tostring(Input.UserInputType) == Keybind.Key then
                 if Keybind.Mode == "Toggle" then 
@@ -2198,15 +2204,15 @@ local Library do
 
                 Keybind:SetOpen(false)
             end
-        end)
+        end))
 
-        Library:Connect(UserInputService.InputEnded, function(Input)
+        Library:Connect(UserInputService.InputEnded, LPH_NO_VIRTUALIZE(function(Input)
             if tostring(Input.KeyCode) == Keybind.Key or tostring(Input.UserInputType) == Keybind.Key then
                 if Keybind.Mode == "Hold" then 
                     Keybind:Press(false)
                 end
             end
-        end)
+        end))
 
         Items["Toggle"]:Connect("MouseButton1Down", function()
             Keybind.Mode = "Toggle"
@@ -2396,12 +2402,12 @@ local Library do
             end)
         end
 
-        Library:Connect(UserInputService.InputBegan, function(Input, gp)
+        Library:Connect(UserInputService.InputBegan, LPH_NO_VIRTUALIZE(function(Input, gp)
 			if gp then return end
             if tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind then
                 Window:SetOpen(not Window.IsOpen)
             end
-        end)
+        end))
 
         Window.Elements = Items
 
@@ -3191,25 +3197,30 @@ local Library do
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 end
 
-                if NewSection.FadeObjects == nil then
-                    NewSection.FadeObjects = {}
-                    local Descendants = SubItems["Content"].Instance:GetDescendants()
-                    TableInsert(Descendants, SubItems["Content"].Instance)
+                local Descendants = SubItems["Content"].Instance:GetDescendants()
+                TableInsert(Descendants, SubItems["Content"].Instance)
 
-                    for _, Value in Descendants do
-                        local Properties = Library:GetTransparencyPropertyFromItem(Value)
-                        if Properties then
-                            TableInsert(NewSection.FadeObjects, { Instance = Value, Properties = Properties })
+                local NewTween
+                for Index, Value in Descendants do 
+                    local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                    if not ValueIndex then 
+                        continue
+                    end
+
+                    if type(ValueIndex) == "table" then
+                        for _, Property in ValueIndex do 
+                            NewTween = Library:FadeItem(Value, Property, Bool, MultiSection.Window.FadeSpeed or 0.5)
                         end
+                    else
+                        NewTween = Library:FadeItem(Value, ValueIndex, Bool, MultiSection.Window.FadeSpeed or 0.5)
                     end
                 end
 
-                local NewTween
-                for _, Data in NewSection.FadeObjects do
-                    NewTween = Library:FadeItem(Data.Instance, Data.Properties, Bool, MultiSection.Window.FadeSpeed or 0.5)
-                end
-
-                Debounce = false
+                Library:Connect(NewTween.Tween.Completed, function()
+                    Debounce = false
+                    SubItems["Content"].Instance.Visible = Bool
+                end)
             end
 
             SubItems["Inactive"]:Connect("MouseButton1Down", function()
@@ -3884,7 +3895,7 @@ local Library do
             end
         end)
 
-        Library:Connect(UserInputService.InputChanged, function(Input)
+        Library:Connect(UserInputService.InputChanged, LPH_NO_VIRTUALIZE(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseMovement and Slider.Sliding then
                 local MousePos = UserInputService:GetMouseLocation()
 
@@ -3893,7 +3904,7 @@ local Library do
 
                 Slider:Set(Value)
             end
-        end)
+        end))
 
         if Slider.Default then
             Slider:Set(Slider.Default)
