@@ -3920,15 +3920,16 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Library.Holder.Instance,
+                Parent = Items["Dropdown"].Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
-                Size = UDim2New(0, Items["Dropdown"].Instance.AbsoluteSize.X, 0, 0),
+                Position = UDim2New(0, 0, 1, 5),
+                Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
-                ZIndex = 100,
                 AutomaticSize = Enum.AutomaticSize.Y,
-                BackgroundColor3 = FromRGB(20, 20, 25)
+                BackgroundColor3 = FromRGB(20, 20, 25),
+                ClipsDescendants = false
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
             
             Instances:Create("UIStroke", {
@@ -4154,18 +4155,17 @@ local Library do
 
         local Debounce = false
 
-                function Dropdown:SetOpen(Bool)
+        function Dropdown:SetOpen(Bool)
             Dropdown.IsOpen = Bool
 
             if Bool then 
-                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
-                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
-                
-                Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 2)
-                Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
                 Items["OptionHolder"].Instance.Visible = true
+                Items["OptionHolder"].Instance.ZIndex = 100
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
+                
+                -- Force a layout update
+                Items["OptionHolder"].Instance.Size = UDim2New(1, 0, 0, 1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
