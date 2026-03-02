@@ -3925,22 +3925,6 @@ local Library do
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
-
-            local function ToggleOpen()
-                Dropdown:SetOpen(not Dropdown.IsOpen)
-            end
-
-            Items["Open"]:Connect("MouseButton1Down", ToggleOpen)
-            
-            local CaptureButton = Instances:Create("TextButton", {
-                Parent = Items["RealDropdown"].Instance,
-                Size = UDim2New(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = "",
-                Name = "\0",
-                ZIndex = 2
-            })
-            CaptureButton:Connect("MouseButton1Down", ToggleOpen)
             
             Instances:Create("UIStroke", {
                 Parent = Items["Value"].Instance,
@@ -4187,7 +4171,8 @@ local Library do
             end
 
             Dropdown.IsOpen = Bool
-            Debounce = true
+
+            Debounce = true 
 
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
