@@ -1571,16 +1571,15 @@ local Library do
             end
 
             Colorpicker.IsOpen = Bool
-
-            Debounce = true 
+            Debounce = true
 
             if Bool then 
-                Items["ColorpickerWindow"].Instance.Visible = true
-                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15)
-
                 if Library.CurrentColorpicker then
                     Library.CurrentColorpicker:SetOpen(false)
                 end
+                
+                Items["ColorpickerWindow"].Instance.Visible = true
+                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerWindow"].Instance.AbsolutePosition.X, 0, Items["ColorpickerWindow"].Instance.AbsolutePosition.Y)
                 Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
@@ -3919,7 +3918,8 @@ local Library do
                 Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
                 AutomaticSize = Enum.AutomaticSize.Y,
-                BackgroundColor3 = FromRGB(20, 20, 25)
+                BackgroundColor3 = FromRGB(20, 20, 25),
+                ClipsDescendants = false
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
             
             Instances:Create("UIStroke", {
@@ -4062,11 +4062,13 @@ local Library do
 
             function OptionData:Toggle(State)
                 if State == "Active" then 
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
+                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 else
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
+                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
                 end
             end
 
@@ -4144,32 +4146,28 @@ local Library do
         local Debounce = false
 
         function Dropdown:SetOpen(Bool)
-            if Debounce then 
-                return 
-            end
-
             Dropdown.IsOpen = Bool
-            Debounce = true
 
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 15
+                Items["OptionHolder"].Instance.ZIndex = 100
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
+                
+                -- Force a layout update
+                Items["OptionHolder"].Instance.Size = UDim2New(1, 0, 0, 1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
                 Items["OptionHolder"].Instance.Visible = false
             end
-
-            Debounce = false
         end
 
         for Index, Value in Dropdown.Items do 
             Dropdown:Add(Value)
         end
 
-        Items["Open"]:Connect("MouseButton1Down", function()
+        Items["RealDropdown"]:Connect("MouseButton1Down", function()
             Dropdown:SetOpen(not Dropdown.IsOpen)
         end)
 
