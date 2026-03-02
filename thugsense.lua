@@ -4154,7 +4154,7 @@ local Library do
 
         local Debounce = false
 
-        function Dropdown:SetOpen(Bool)
+                function Dropdown:SetOpen(Bool)
             Dropdown.IsOpen = Bool
 
             if Bool then 
