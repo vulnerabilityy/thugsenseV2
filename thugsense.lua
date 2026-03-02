@@ -707,17 +707,16 @@ local Library do
 
         local NewTween = Tween:Create(Item, TweenInfo.new(Speed or Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
             [Property] = Visibility and OldTransparency or 1
-        })
-        NewTween:Play()
+        }, true)
 
-        Library:Connect(NewTween.Completed, function()
+        Library:Connect(NewTween.Tween.Completed, function()
             if not Visibility then 
                 task.wait()
                 Item[Property] = OldTransparency
             end
         end)
 
-        return { Tween = NewTween }
+        return NewTween
     end)
 
     Library.Unload = function(self)
@@ -3950,13 +3949,13 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Library.Holder.Instance,
+                Parent = Items["Dropdown"].Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
+                Position = UDim2New(0, 0, 1, 5),
                 Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
-                ZIndex = 15,
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
@@ -4061,7 +4060,7 @@ local Library do
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 Size = UDim2New(1, 0, 0, 15),
-                ZIndex = 20,
+                ZIndex = 5,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -4079,13 +4078,19 @@ local Library do
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 BorderSizePixel = 0,
-                ZIndex = 21,
+                ZIndex = 5,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
             
             OptionText:AddToTheme({TextColor3 = "Text"})
-            
+
+            Instances:Create("UIStroke", {
+                Parent = OptionText.Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0"
+            }):AddToTheme({Color = "Text Border"})
+
             local OptionData = {
                 Selected = false,
                 Name = Option,
@@ -4096,12 +4101,10 @@ local Library do
             function OptionData:Toggle(State)
                 if State == "Active" then 
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
-                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
-                    OptionData.Text.Instance.TextTransparency = 0
+                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 else
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
-                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
-                    OptionData.Text.Instance.TextTransparency = 0.48
+                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
                 end
             end
 
@@ -4148,7 +4151,7 @@ local Library do
                 end
 
                 if Dropdown.Callback then 
-                    Library:SafeCall(Dropdown.Callback, Dropdown.Value or Dropdown.Value)
+                    Library:SafeCall(Dropdown.Callback, Dropdown.Value)
                 end
             end
 
@@ -4187,29 +4190,53 @@ local Library do
             Debounce = true
 
             if Bool then 
-                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
-                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
-                
-                 Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 5)
-                 Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
-                 Items["OptionHolder"].Instance.Visible = true
-                
+                Items["OptionHolder"].Instance.Visible = true
+                Items["OptionHolder"].Instance.ZIndex = 15
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
-                Items["OptionHolder"].Instance.Visible = false
             end
 
-            Debounce = false
+            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
+            TableInsert(Descendants, Items["OptionHolder"].Instance)
+
+            local NewTween
+            for Index, Value in Descendants do 
+                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
+
+                if not ValueIndex then 
+                    continue
+                end
+
+                if not StringFind(Value.ClassName, "UI") then 
+                    Value.ZIndex = Bool and 15 or 1
+                end
+
+                if type(ValueIndex) == "table" then
+                    for _, Property in ValueIndex do 
+                        NewTween = Library:FadeItem(Value, Property, Bool, Dropdown.Window.FadeSpeed)
+                    end
+                else
+                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Dropdown.Window.FadeSpeed)
+                end
+            end
+
+            Library:Connect(NewTween.Tween.Completed, function()
+                Debounce = false
+                Items["OptionHolder"].Instance.Visible = Bool
+                Items["OptionHolder"].Instance.ZIndex = Bool and 15 or 1
+            end)
         end
 
         for Index, Value in Dropdown.Items do 
             Dropdown:Add(Value)
         end
 
-        -- Connected via ToggleOpen function above
+        Items["Open"]:Connect("MouseButton1Down", function()
+            Dropdown:SetOpen(not Dropdown.IsOpen)
+        end)
 
         if Dropdown.Default then 
             Dropdown:Set(Dropdown.Default)
