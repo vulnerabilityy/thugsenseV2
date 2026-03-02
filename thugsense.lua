@@ -1586,7 +1586,6 @@ local Library do
                 end
                 
                 Items["ColorpickerWindow"].Instance.Visible = true
-                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerWindow"].Instance.AbsolutePosition.X, 0, Items["ColorpickerWindow"].Instance.AbsolutePosition.Y)
                 Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
@@ -1627,15 +1626,15 @@ local Library do
             local ColorPositionX = MathClamp(1 - self.Saturation, 0, 0.989)
             local ColorPositionY = MathClamp(1 - self.Value, 0, 0.989)
 
-            Items["PaletteDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(ColorPositionX, 0, ColorPositionY, 0)})
+            Items["PaletteDragger"].Instance.Position = UDim2New(ColorPositionX, 0, ColorPositionY, 0)
 
             local HuePositionY = MathClamp(self.Hue, 0, 0.994)
 
-            Items["HueDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, HuePositionY, 0)})
+            Items["HueDragger"].Instance.Position = UDim2New(0, 0, HuePositionY, 0)
 
             local AlphaPositionX = MathClamp(self.Alpha, 0, 0.994)
 
-            Items["AlphaDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(AlphaPositionX, 0, 0, 0)})
+            Items["AlphaDragger"].Instance.Position = UDim2New(AlphaPositionX, 0, 0, 0)
 
             self:Update()
         end
@@ -1650,11 +1649,11 @@ local Library do
                 Alpha = self.Alpha
             }
 
-            Items["ColorpickerButton"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
-            Items["Palette"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = FromHSV(self.Hue, 1, 1)})
+            Items["ColorpickerButton"].Instance.BackgroundColor3 = self.Color
+            Items["Palette"].Instance.BackgroundColor3 = FromHSV(self.Hue, 1, 1)
 
             if not IsFromAlpha then 
-                Items["Alpha"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
+                Items["Alpha"].Instance.BackgroundColor3 = self.Color
             end
 
             if Data.Callback then 
@@ -1676,7 +1675,7 @@ local Library do
             local SlideX = MathClamp((Input.Position.X - Items["Palette"].Instance.AbsolutePosition.X) / Items["Palette"].Instance.AbsoluteSize.X, 0, 0.989)
             local SlideY = MathClamp((Input.Position.Y - Items["Palette"].Instance.AbsolutePosition.Y) / Items["Palette"].Instance.AbsoluteSize.Y, 0, 0.989)
 
-            Items["PaletteDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(SlideX, 0, SlideY, 0)})
+            Items["PaletteDragger"].Instance.Position = UDim2New(SlideX, 0, SlideY, 0)
             self:Update()            
         end
 
@@ -1691,7 +1690,7 @@ local Library do
 
             local PositionY = MathClamp((Input.Position.Y - Items["Hue"].Instance.AbsolutePosition.Y) / Items["Hue"].Instance.AbsoluteSize.Y, 0, 0.994)
 
-            Items["HueDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, PositionY, 0)})
+            Items["HueDragger"].Instance.Position = UDim2New(0, 0, PositionY, 0)
             self:Update()
         end
 
@@ -1706,7 +1705,7 @@ local Library do
 
             local PositionX = MathClamp((Input.Position.X - Items["Alpha"].Instance.AbsolutePosition.X) / Items["Alpha"].Instance.AbsoluteSize.X, 0, 0.994)
 
-            Items["AlphaDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(PositionX, 0, 0, 0)})
+            Items["AlphaDragger"].Instance.Position = UDim2New(PositionX, 0, 0, 0)
             self:Update(true)
         end
 
@@ -1980,26 +1979,21 @@ local Library do
             Keybind.IsOpen = Bool
 
             if Bool then 
-                Debounce = true
                 Items["Window"].Instance.Visible = true
                 Items["Window"].Instance.ZIndex = 16
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 0})
-
-                task.wait(0.1)
+                Items["Window"].Instance.BackgroundTransparency = 0
 
                 for Index, Value in Items["Window"].Instance:GetDescendants() do 
                     if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 0}, true)
+                        Value.Transparency = 0
                     elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 0}, true)
+                        Value.TextTransparency = 0
                         Value.ZIndex = 16
                     end
                 end
             else 
                 Items["Window"].Instance.Visible = false
             end
-
-            Debounce = false
         end
 
         function Keybind:Set(Key)
