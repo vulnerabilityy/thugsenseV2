@@ -3925,6 +3925,22 @@ local Library do
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Value"]:AddToTheme({TextColor3 = "Text"})
+
+            local function ToggleOpen()
+                Dropdown:SetOpen(not Dropdown.IsOpen)
+            end
+
+            Items["Open"]:Connect("MouseButton1Down", ToggleOpen)
+            
+            local CaptureButton = Instances:Create("TextButton", {
+                Parent = Items["RealDropdown"].Instance,
+                Size = UDim2New(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                Name = "\0",
+                ZIndex = 2
+            })
+            CaptureButton:Connect("MouseButton1Down", ToggleOpen)
             
             Instances:Create("UIStroke", {
                 Parent = Items["Value"].Instance,
@@ -3933,13 +3949,13 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Items["Dropdown"].Instance,
+                Parent = Library.Holder.Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
-                Position = UDim2New(0, 0, 1, 5),
                 Size = UDim2New(1, 0, 0, 0),
                 BorderSizePixel = 2,
+                ZIndex = 15,
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
@@ -4174,8 +4190,13 @@ local Library do
             Debounce = true
 
             if Bool then 
-                Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 15
+                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
+                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
+                
+                 Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 5)
+                 Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
+                 Items["OptionHolder"].Instance.Visible = true
+                
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
@@ -4191,9 +4212,7 @@ local Library do
             Dropdown:Add(Value)
         end
 
-        Items["Open"]:Connect("MouseButton1Down", function()
-            Dropdown:SetOpen(not Dropdown.IsOpen)
-        end)
+        -- Connected via ToggleOpen function above
 
         if Dropdown.Default then 
             Dropdown:Set(Dropdown.Default)
