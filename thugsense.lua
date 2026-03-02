@@ -457,15 +457,22 @@ local Library do
         end
 
         Instances.Connect = function(self, Event, Callback, Name)
-            if not self.Instance then 
+            if not self or not self.Instance then 
                 return
             end
 
-            if not self.Instance[Event] then 
+            -- Completely bulletproof connection check
+            local Signal
+            local Success = pcall(function()
+                Signal = self.Instance[Event]
+            end)
+
+            if not Success or (typeof(Signal) ~= "RBXScriptSignal") then 
+                -- If it's not a signal, don't try to connect (prevents HiddenUI Frame error)
                 return
             end
 
-            return Library:Connect(self.Instance[Event], Callback, Name)
+            return Library:Connect(Signal, Callback, Name)
         end
 
         Instances.Tween = function(self, Info, Goal)
@@ -740,15 +747,10 @@ local Library do
     end
     
     Library.SafeCall = function(self, Function, ...)
-        local Arguements = { ... }
-        local Success, Result = pcall(Function, TableUnpack(Arguements))
-
+        local Success, Result = pcall(Function, ...)
         if not Success then
-            Library:Notification("Error caught in function, report this to the devs:\n"..Result, 5, FromRGB(255, 0, 0))
             warn(Result)
-            return false
         end
-
         return Success
     end
 
@@ -887,14 +889,15 @@ local Library do
     end
     Library.ChangeTheme = function(self, Theme, Color)
         self.Theme[Theme] = Color
-
-        for Index, Item in self.ThemeItems do
+        local ThemeMap = self.ThemeItems
+        for i = 1, #ThemeMap do
+            local Item = ThemeMap[i]
             local Instance = Item.Item
-            if not Instance then continue end
-
-            for Property, Value in Item.Properties do
-                if type(Value) == "string" and self.Theme[Value] then
-                    Instance[Property] = self.Theme[Value]
+            if Instance then
+                for Property, Value in Item.Properties do
+                    if Value == Theme then
+                        Instance[Property] = Color
+                    end
                 end
             end
         end
@@ -1575,53 +1578,22 @@ local Library do
             end
 
             Colorpicker.IsOpen = Bool
-
-            Debounce = true 
+            Debounce = true
 
             if Bool then 
-                Items["ColorpickerWindow"].Instance.Visible = true
-                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15)
-
                 if Library.CurrentColorpicker then
                     Library.CurrentColorpicker:SetOpen(false)
-                    Library.CurrentColorpicker = nil 
                 end
-
-                if not Library.CurrentColorpicker then 
-                    Library.CurrentColorpicker = Colorpicker
-                end
+                
+                Items["ColorpickerWindow"].Instance.Visible = true
+                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerWindow"].Instance.AbsolutePosition.X, 0, Items["ColorpickerWindow"].Instance.AbsolutePosition.Y)
+                Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
+                Items["ColorpickerWindow"].Instance.Visible = false
             end
 
-            local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if not StringFind(Value.ClassName, "UI") then 
-                    Value.ZIndex = Bool and 10001 or 1
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["ColorpickerWindow"].Instance.Visible = Bool
-            end)
+            Debounce = false
         end
 
         function Colorpicker:Get()
@@ -2572,23 +2544,19 @@ local Library do
             end
 
             Page.Active = Bool
-
             Debounce = true 
 
             if Bool then 
                 Items["Page"].Instance.Visible = true
-
-                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+                Items["Text"].Instance.TextColor3 = Library.Theme.Accent
+                Items["Text"].Instance.TextTransparency = 0
                 Items["Hide"].Instance.Visible = true
-
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             else
-                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                Items["Text"].Instance.TextColor3 = Library.Theme.Text
+                Items["Text"].Instance.TextTransparency = 0.5
                 Items["Hide"].Instance.Visible = false
-
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
-            end
-            if not Bool then
                 Items["Page"].Instance.Visible = false
             end
 
@@ -2775,28 +2743,27 @@ local Library do
         local Debounce = false
 
         function SubPage:Turn(Bool)
-            if Debounce then return end
+            if Debounce then 
+                return 
+            end
 
             SubPage.Active = Bool
             Debounce = true
 
             if Bool then 
                 Items["Subtab"].Instance.Visible = true
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
+                Items["Icon"].Instance.ImageColor3 = Library.Theme.Accent
+                Items["Icon"].Instance.ImageTransparency = 0
                 Items["Hide"].Instance.Visible = true
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, 1)
             else
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.35})
+                Items["Icon"].Instance.ImageColor3 = Library.Theme.Text
+                Items["Icon"].Instance.ImageTransparency = 0.35
                 Items["Hide"].Instance.Visible = false
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
-            end
-
-            for _, obj in Items["Subtab"].Instance:GetDescendants() do
-                if obj:IsA("GuiObject") then
-                    obj.Visible = Bool
-                end
+                Items["Subtab"].Instance.Visible = false
             end
 
             Debounce = false
@@ -3122,22 +3089,17 @@ local Library do
                 end
 
                 NewSection.Active = Bool
-
                 Debounce = true 
 
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
-
-                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
-
+                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Accent
+                    SubItems["Text"].Instance.TextTransparency = 0
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
-                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
-
+                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Text
+                    SubItems["Text"].Instance.TextTransparency = 0.5
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
-                end
-
-                if not Bool then
                     SubItems["Content"].Instance.Visible = false
                 end
 
@@ -3448,15 +3410,13 @@ local Library do
             Library.Flags[Toggle.Flag] = Toggle.Value
 
             if Toggle.Value then 
+                Items["Indicator"].Instance.BackgroundColor3 = Library.Theme.Accent
                 Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
-
-                Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
-                Items["Text"]:Tween(nil, {TextTransparency = 0})
+                Items["Text"].Instance.TextTransparency = 0
             else
+                Items["Indicator"].Instance.BackgroundColor3 = Library.Theme.Element
                 Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-
-                Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-                Items["Text"]:Tween(nil, {TextTransparency = 0.48})
+                Items["Text"].Instance.TextTransparency = 0.48
             end
 
             if Toggle.Callback then 
@@ -3608,19 +3568,13 @@ local Library do
         function Button:Press()
             Library:SafeCall(Button.Callback)
 
-            Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
-            Items["Button"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
+            Items["Text"].Instance.TextColor3 = Library.Theme.Accent
+            Items["Button"].Instance.BackgroundColor3 = Library.Theme.Accent
 
-            Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent})
-            Items["Button"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
+            task.wait(0.075)
 
-            task.wait(0.1)
-
-            Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
-            Items["Button"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-
-            Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text})
-            Items["Button"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
+            Items["Text"].Instance.TextColor3 = Library.Theme.Text
+            Items["Button"].Instance.BackgroundColor3 = Library.Theme.Element
         end
 
         function Button:SetVisiblity(Bool)
@@ -3784,7 +3738,7 @@ local Library do
                 Items["Value"].Instance.Text = `{Slider.Value}{Slider.Suffix}`
             end
 
-            Items["Indicator"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)})
+            Items["Indicator"].Instance.Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)
 
             if Slider.Callback then 
                 Library:SafeCall(Slider.Callback, Slider.Value)
@@ -3867,9 +3821,11 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, 0, 0, 34),
                 BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255)
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                ClipsDescendants = false
             }) 
             
+            Items["Dropdown"].Instance.ZIndex = 5            
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Dropdown"].Instance,
                 FontFace = Library.Font,
@@ -3881,7 +3837,6 @@ local Library do
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Size = UDim2New(1, 0, 0, 13),
                 BorderSizePixel = 0,
-                TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -3890,8 +3845,8 @@ local Library do
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
-            
-            Items["RealDropdown"] = Instances:Create("Frame", {
+
+            Items["RealDropdown"] = Instances:Create("TextButton", {
                 Parent = Items["Dropdown"].Instance,
                 AnchorPoint = Vector2New(0, 1),
                 Name = "\0",
@@ -3899,7 +3854,9 @@ local Library do
                 BorderColor3 = FromRGB(10, 10, 10),
                 Size = UDim2New(1, 0, 0, 17),
                 BorderSizePixel = 2,
-                BackgroundColor3 = FromRGB(33, 33, 36)
+                BackgroundColor3 = FromRGB(33, 33, 36),
+                Text = "",
+                AutoButtonColor = false
             })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
             
             Instances:Create("UIGradient", {
@@ -3963,13 +3920,13 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Items["Dropdown"].Instance,
+                Parent = Library.Holder.Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
-                Position = UDim2New(0, 0, 1, 5),
-                Size = UDim2New(1, 0, 0, 0),
+                Size = UDim2New(0, Items["Dropdown"].Instance.AbsoluteSize.X, 0, 0),
                 BorderSizePixel = 2,
+                ZIndex = 100,
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
@@ -4083,7 +4040,7 @@ local Library do
                 Parent = OptionButton.Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
-                TextTransparency = 0.48,
+                TextTransparency = 0,
                 Text = Option,
                 Name = "\0",
                 BorderColor3 = FromRGB(0, 0, 0),
@@ -4114,11 +4071,13 @@ local Library do
 
             function OptionData:Toggle(State)
                 if State == "Active" then 
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
+                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 else
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
+                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
                 end
             end
 
@@ -4196,54 +4155,28 @@ local Library do
         local Debounce = false
 
         function Dropdown:SetOpen(Bool)
-            if Debounce then 
-                return 
-            end
-
             Dropdown.IsOpen = Bool
-            Debounce = true
 
             if Bool then 
+                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
+                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
+                
+                Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 2)
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 15
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
+                Items["OptionHolder"].Instance.Visible = false
             end
-
-            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["OptionHolder"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, self.Window.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, self.Window.FadeSpeed)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["OptionHolder"].Instance.Visible = Bool
-            end)
         end
 
         for Index, Value in Dropdown.Items do 
             Dropdown:Add(Value)
         end
 
-        Items["Open"]:Connect("MouseButton1Down", function()
+        Items["RealDropdown"]:Connect("MouseButton1Down", function()
             Dropdown:SetOpen(not Dropdown.IsOpen)
         end)
 
@@ -4494,11 +4427,15 @@ local Library do
         end
 
         Items["Inline"]:Connect("Focused", function()
+            Items["Inline"].Instance.TextColor3 = Library.Theme.Accent
             Items["Inline"]:ChangeItemTheme({TextColor3 = "Accent"})
-            Items["Inline"]:Tween(nil, {TextColor3 = Library.Theme.Accent})
         end)
 
         Items["Inline"]:Connect("FocusLost", function()
+            Items["Inline"].Instance.TextColor3 = Library.Theme.Text
+            Items["Inline"]:ChangeItemTheme({TextColor3 = "Text"})
+            Textbox:Set(Items["Inline"].Instance.Text)
+        end)
             Items["Inline"]:ChangeItemTheme({TextColor3 = "Text"})
             Items["Inline"]:Tween(nil, {TextColor3 = Library.Theme.Text})
 
