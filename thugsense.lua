@@ -2541,11 +2541,13 @@ local Library do
 
             if Bool then 
                 Items["Page"].Instance.Visible = true
-                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+                Items["Text"].Instance.TextColor3 = Library.Theme.Accent
+                Items["Text"].Instance.TextTransparency = 0
                 Items["Hide"].Instance.Visible = true
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             else
-                Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                Items["Text"].Instance.TextColor3 = Library.Theme.Text
+                Items["Text"].Instance.TextTransparency = 0.5
                 Items["Hide"].Instance.Visible = false
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                 Items["Page"].Instance.Visible = false
@@ -2729,6 +2731,8 @@ local Library do
 
                 SubPage.ColumnsData[Index] = NewColumn
             end
+        end
+
         local Debounce = false
 
         function SubPage:Turn(Bool)
@@ -2741,12 +2745,14 @@ local Library do
 
             if Bool then 
                 Items["Subtab"].Instance.Visible = true
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
+                Items["Icon"].Instance.ImageColor3 = Library.Theme.Accent
+                Items["Icon"].Instance.ImageTransparency = 0
                 Items["Hide"].Instance.Visible = true
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, 1)
             else
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.35})
+                Items["Icon"].Instance.ImageColor3 = Library.Theme.Text
+                Items["Icon"].Instance.ImageTransparency = 0.35
                 Items["Hide"].Instance.Visible = false
                 Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
@@ -3080,10 +3086,12 @@ local Library do
 
                 if Bool then 
                     SubItems["Content"].Instance.Visible = true
-                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Accent
+                    SubItems["Text"].Instance.TextTransparency = 0
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                 else
-                    SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                    SubItems["Text"].Instance.TextColor3 = Library.Theme.Text
+                    SubItems["Text"].Instance.TextTransparency = 0.5
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Text"})
                     SubItems["Content"].Instance.Visible = false
                 end
@@ -3814,9 +3822,11 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, 0, 0, 34),
                 BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255)
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                ClipsDescendants = false
             }) 
             
+            Items["Dropdown"].Instance.ZIndex = 5            
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Dropdown"].Instance,
                 FontFace = Library.Font,
@@ -3910,16 +3920,15 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
             
             Items["OptionHolder"] = Instances:Create("Frame", {
-                Parent = Items["Dropdown"].Instance,
+                Parent = Library.Holder.Instance,
                 Visible = false,
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
-                Position = UDim2New(0, 0, 1, 5),
-                Size = UDim2New(1, 0, 0, 0),
+                Size = UDim2New(0, Items["Dropdown"].Instance.AbsoluteSize.X, 0, 0),
                 BorderSizePixel = 2,
+                ZIndex = 100,
                 AutomaticSize = Enum.AutomaticSize.Y,
-                BackgroundColor3 = FromRGB(20, 20, 25),
-                ClipsDescendants = false
+                BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
             
             Instances:Create("UIStroke", {
@@ -4149,13 +4158,14 @@ local Library do
             Dropdown.IsOpen = Bool
 
             if Bool then 
+                local AbsolutePos = Items["RealDropdown"].Instance.AbsolutePosition
+                local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
+                
+                Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 2)
+                Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 100
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
-                
-                -- Force a layout update
-                Items["OptionHolder"].Instance.Size = UDim2New(1, 0, 0, 1)
             else
                 Items["Open"].Instance.Text = "+"
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
