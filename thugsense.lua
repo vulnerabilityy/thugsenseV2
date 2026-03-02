@@ -457,22 +457,15 @@ local Library do
         end
 
         Instances.Connect = function(self, Event, Callback, Name)
-            if not self or not self.Instance then 
+            if not self.Instance then 
                 return
             end
 
-            -- Completely bulletproof connection check
-            local Signal
-            local Success = pcall(function()
-                Signal = self.Instance[Event]
-            end)
-
-            if not Success or (typeof(Signal) ~= "RBXScriptSignal") then 
-                -- If it's not a signal, don't try to connect (prevents HiddenUI Frame error)
+            if not self.Instance[Event] then 
                 return
             end
 
-            return Library:Connect(Signal, Callback, Name)
+            return Library:Connect(self.Instance[Event], Callback, Name)
         end
 
         Instances.Tween = function(self, Info, Goal)
@@ -1586,6 +1579,7 @@ local Library do
                 end
                 
                 Items["ColorpickerWindow"].Instance.Visible = true
+                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerWindow"].Instance.AbsolutePosition.X, 0, Items["ColorpickerWindow"].Instance.AbsolutePosition.Y)
                 Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
@@ -1626,15 +1620,15 @@ local Library do
             local ColorPositionX = MathClamp(1 - self.Saturation, 0, 0.989)
             local ColorPositionY = MathClamp(1 - self.Value, 0, 0.989)
 
-            Items["PaletteDragger"].Instance.Position = UDim2New(ColorPositionX, 0, ColorPositionY, 0)
+            Items["PaletteDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(ColorPositionX, 0, ColorPositionY, 0)})
 
             local HuePositionY = MathClamp(self.Hue, 0, 0.994)
 
-            Items["HueDragger"].Instance.Position = UDim2New(0, 0, HuePositionY, 0)
+            Items["HueDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, HuePositionY, 0)})
 
             local AlphaPositionX = MathClamp(self.Alpha, 0, 0.994)
 
-            Items["AlphaDragger"].Instance.Position = UDim2New(AlphaPositionX, 0, 0, 0)
+            Items["AlphaDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(AlphaPositionX, 0, 0, 0)})
 
             self:Update()
         end
@@ -1649,11 +1643,11 @@ local Library do
                 Alpha = self.Alpha
             }
 
-            Items["ColorpickerButton"].Instance.BackgroundColor3 = self.Color
-            Items["Palette"].Instance.BackgroundColor3 = FromHSV(self.Hue, 1, 1)
+            Items["ColorpickerButton"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
+            Items["Palette"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = FromHSV(self.Hue, 1, 1)})
 
             if not IsFromAlpha then 
-                Items["Alpha"].Instance.BackgroundColor3 = self.Color
+                Items["Alpha"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
             end
 
             if Data.Callback then 
@@ -1675,7 +1669,7 @@ local Library do
             local SlideX = MathClamp((Input.Position.X - Items["Palette"].Instance.AbsolutePosition.X) / Items["Palette"].Instance.AbsoluteSize.X, 0, 0.989)
             local SlideY = MathClamp((Input.Position.Y - Items["Palette"].Instance.AbsolutePosition.Y) / Items["Palette"].Instance.AbsoluteSize.Y, 0, 0.989)
 
-            Items["PaletteDragger"].Instance.Position = UDim2New(SlideX, 0, SlideY, 0)
+            Items["PaletteDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(SlideX, 0, SlideY, 0)})
             self:Update()            
         end
 
@@ -1690,7 +1684,7 @@ local Library do
 
             local PositionY = MathClamp((Input.Position.Y - Items["Hue"].Instance.AbsolutePosition.Y) / Items["Hue"].Instance.AbsoluteSize.Y, 0, 0.994)
 
-            Items["HueDragger"].Instance.Position = UDim2New(0, 0, PositionY, 0)
+            Items["HueDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, PositionY, 0)})
             self:Update()
         end
 
@@ -1705,7 +1699,7 @@ local Library do
 
             local PositionX = MathClamp((Input.Position.X - Items["Alpha"].Instance.AbsolutePosition.X) / Items["Alpha"].Instance.AbsoluteSize.X, 0, 0.994)
 
-            Items["AlphaDragger"].Instance.Position = UDim2New(PositionX, 0, 0, 0)
+            Items["AlphaDragger"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(PositionX, 0, 0, 0)})
             self:Update(true)
         end
 
@@ -1979,21 +1973,26 @@ local Library do
             Keybind.IsOpen = Bool
 
             if Bool then 
+                Debounce = true
                 Items["Window"].Instance.Visible = true
                 Items["Window"].Instance.ZIndex = 16
-                Items["Window"].Instance.BackgroundTransparency = 0
+                Items["Window"]:Tween(nil, {BackgroundTransparency = 0})
+
+                task.wait(0.1)
 
                 for Index, Value in Items["Window"].Instance:GetDescendants() do 
                     if Value:IsA("UIStroke") then
-                        Value.Transparency = 0
+                        Tween:Create(Value, nil, {Transparency = 0}, true)
                     elseif Value:IsA("TextButton") then
-                        Value.TextTransparency = 0
+                        Tween:Create(Value, nil, {TextTransparency = 0}, true)
                         Value.ZIndex = 16
                     end
                 end
             else 
                 Items["Window"].Instance.Visible = false
             end
+
+            Debounce = false
         end
 
         function Keybind:Set(Key)
@@ -3404,13 +3403,15 @@ local Library do
             Library.Flags[Toggle.Flag] = Toggle.Value
 
             if Toggle.Value then 
-                Items["Indicator"].Instance.BackgroundColor3 = Library.Theme.Accent
                 Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
-                Items["Text"].Instance.TextTransparency = 0
+
+                Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
+                Items["Text"]:Tween(nil, {TextTransparency = 0})
             else
-                Items["Indicator"].Instance.BackgroundColor3 = Library.Theme.Element
                 Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-                Items["Text"].Instance.TextTransparency = 0.48
+
+                Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
+                Items["Text"]:Tween(nil, {TextTransparency = 0.48})
             end
 
             if Toggle.Callback then 
@@ -3562,13 +3563,19 @@ local Library do
         function Button:Press()
             Library:SafeCall(Button.Callback)
 
-            Items["Text"].Instance.TextColor3 = Library.Theme.Accent
-            Items["Button"].Instance.BackgroundColor3 = Library.Theme.Accent
+            Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
+            Items["Button"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
 
-            task.wait(0.075)
+            Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent})
+            Items["Button"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
 
-            Items["Text"].Instance.TextColor3 = Library.Theme.Text
-            Items["Button"].Instance.BackgroundColor3 = Library.Theme.Element
+            task.wait(0.1)
+
+            Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
+            Items["Button"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+
+            Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text})
+            Items["Button"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
         end
 
         function Button:SetVisiblity(Bool)
@@ -3732,7 +3739,7 @@ local Library do
                 Items["Value"].Instance.Text = `{Slider.Value}{Slider.Suffix}`
             end
 
-            Items["Indicator"].Instance.Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)
+            Items["Indicator"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)})
 
             if Slider.Callback then 
                 Library:SafeCall(Slider.Callback, Slider.Value)
@@ -3831,6 +3838,7 @@ local Library do
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Size = UDim2New(1, 0, 0, 13),
                 BorderSizePixel = 0,
+                TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
@@ -3839,8 +3847,8 @@ local Library do
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
-
-            Items["RealDropdown"] = Instances:Create("TextButton", {
+            
+            Items["RealDropdown"] = Instances:Create("Frame", {
                 Parent = Items["Dropdown"].Instance,
                 AnchorPoint = Vector2New(0, 1),
                 Name = "\0",
@@ -3848,9 +3856,7 @@ local Library do
                 BorderColor3 = FromRGB(10, 10, 10),
                 Size = UDim2New(1, 0, 0, 17),
                 BorderSizePixel = 2,
-                BackgroundColor3 = FromRGB(33, 33, 36),
-                Text = "",
-                AutoButtonColor = false
+                BackgroundColor3 = FromRGB(33, 33, 36)
             })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
             
             Instances:Create("UIGradient", {
@@ -4156,6 +4162,7 @@ local Library do
                 local AbsoluteSize = Items["RealDropdown"].Instance.AbsoluteSize
                 
                 Items["OptionHolder"].Instance.Position = UDim2New(0, AbsolutePos.X, 0, AbsolutePos.Y + AbsoluteSize.Y + 2)
+                Items["OptionHolder"].Instance.Size = UDim2New(0, AbsoluteSize.X, 0, 0)
                 Items["OptionHolder"].Instance.Visible = true
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
@@ -4421,13 +4428,14 @@ local Library do
         end
 
         Items["Inline"]:Connect("Focused", function()
-            Items["Inline"].Instance.TextColor3 = Library.Theme.Accent
             Items["Inline"]:ChangeItemTheme({TextColor3 = "Accent"})
+            Items["Inline"]:Tween(nil, {TextColor3 = Library.Theme.Accent})
         end)
 
         Items["Inline"]:Connect("FocusLost", function()
-            Items["Inline"].Instance.TextColor3 = Library.Theme.Text
             Items["Inline"]:ChangeItemTheme({TextColor3 = "Text"})
+            Items["Inline"]:Tween(nil, {TextColor3 = Library.Theme.Text})
+
             Textbox:Set(Items["Inline"].Instance.Text)
         end)
 
