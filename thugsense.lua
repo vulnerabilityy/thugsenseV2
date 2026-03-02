@@ -1791,7 +1791,7 @@ local Library do
     Library.CreateKeybind = function(self, Data)
         local Keybind = {
             Key = nil,
-            Value = "",
+            Value = "Empty",
             Mode = "",
 
             Toggled = false,
@@ -1841,7 +1841,7 @@ local Library do
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Text = "  ",
+                Text = "Empty",
                 Name = "\0",
                 BackgroundTransparency = 1,
                 Position = UDim2New(0, 1, 0, 0),
@@ -2005,7 +2005,7 @@ local Library do
                 Keybind.Key = tostring(Key)
 
                 local KeyName = Key.Name
-                local KeyString = Keys[KeyName] or KeyName or "Empty"
+                local KeyString = (KeyName == "Backspace" or KeyName == "Escape") and "Empty" or (Keys[KeyName] or KeyName or "Empty")
                 local TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
 
                 Keybind.Value = TextToDisplay
@@ -2022,6 +2022,7 @@ local Library do
                 if Data.Callback then 
                     Library:SafeCall(Data.Callback, Keybind.Toggled)
                 end
+            elseif type(Key) == "table" then 
                 local RealKeyEnum = Key.Key
                 local KeyName = RealKeyEnum.Name
                 Keybind.Key = tostring(RealKeyEnum)
@@ -2034,7 +2035,7 @@ local Library do
                     Keybind:SetMode("Toggle")
                 end
 
-                local KeyString = Keys[KeyName] or KeyName or "Empty"
+                local KeyString = (KeyName == "Backspace" or KeyName == "Escape") and "Empty" or (Keys[KeyName] or KeyName or "Empty")
                 local TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
 
                 Keybind.Value = TextToDisplay
