@@ -1,4 +1,4 @@
--- Thugsense V2
+-- Thugsense
 --[[
 
     Assign different flags to each element to prevent from configs overriding eachother
