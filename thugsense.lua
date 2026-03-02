@@ -646,7 +646,8 @@ local Library do
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = gethui(),
         Name = "\0",
-        ResetOnSpawn = false
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
 
     Library.NotifHolder = Instances:Create("Frame", {
@@ -4060,7 +4061,7 @@ local Library do
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 Size = UDim2New(1, 0, 0, 15),
-                ZIndex = 5,
+                ZIndex = 20,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -4078,19 +4079,13 @@ local Library do
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 BorderSizePixel = 0,
-                ZIndex = 5,
+                ZIndex = 21,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
             
             OptionText:AddToTheme({TextColor3 = "Text"})
-
-            Instances:Create("UIStroke", {
-                Parent = OptionText.Instance,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Name = "\0"
-            }):AddToTheme({Color = "Text Border"})
-
+            
             local OptionData = {
                 Selected = false,
                 Name = Option,
@@ -4101,10 +4096,12 @@ local Library do
             function OptionData:Toggle(State)
                 if State == "Active" then 
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
+                    OptionData.Text.Instance.TextTransparency = 0
                 else
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
-                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
+                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
+                    OptionData.Text.Instance.TextTransparency = 0.48
                 end
             end
 
@@ -4151,7 +4148,7 @@ local Library do
                 end
 
                 if Dropdown.Callback then 
-                    Library:SafeCall(Dropdown.Callback, Dropdown.Value)
+                    Library:SafeCall(Dropdown.Callback, Dropdown.Value or Dropdown.Value)
                 end
             end
 
