@@ -4436,11 +4436,6 @@ local Library do
             Items["Inline"]:ChangeItemTheme({TextColor3 = "Text"})
             Textbox:Set(Items["Inline"].Instance.Text)
         end)
-            Items["Inline"]:ChangeItemTheme({TextColor3 = "Text"})
-            Items["Inline"]:Tween(nil, {TextColor3 = Library.Theme.Text})
-
-            Textbox:Set(Items["Inline"].Instance.Text)
-        end)
 
         if Textbox.Default then
             Textbox:Set(Textbox.Default)
