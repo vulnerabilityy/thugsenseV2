@@ -735,15 +735,7 @@ local Library do
     end
 
     Library.Thread = function(self, Function)
-        local NewThread = coroutine.create(Function)
-        
-        coroutine.wrap(function()
-            coroutine.resume(NewThread)
-        end)()
-
-        TableInsert(self.Threads, NewThread)
-
-        return NewThread
+        return task.spawn(Function)
     end
     
     Library.SafeCall = function(self, Function, ...)
@@ -892,18 +884,18 @@ local Library do
             end
         end
     end
-
     Library.ChangeTheme = function(self, Theme, Color)
         self.Theme[Theme] = Color
 
         for Index, Item in self.ThemeItems do
-            pcall(function()
-                for Property, Value in Item.Properties do
-                    if type(Value) == "string" and Value == Theme then
-                        Item.Item[Property] = Color
-                    end
+            local Instance = Item.Item
+            if not Instance then continue end
+
+            for Property, Value in Item.Properties do
+                if type(Value) == "string" and self.Theme[Value] then
+                    Instance[Property] = self.Theme[Value]
                 end
-            end)
+            end
         end
     end
 
@@ -1601,34 +1593,11 @@ local Library do
                 Library.CurrentColorpicker = nil
             end
 
-            local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if not StringFind(Value.ClassName, "UI") then 
-                    Value.ZIndex = Bool and 10001 or 1
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Data.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Data.FadeSpeed)
-                end
+            if not Bool then
+                Items["ColorpickerWindow"].Instance.Visible = false
             end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["ColorpickerWindow"].Instance.Visible = Bool
-            end)
+            
+            Debounce = false
         end
 
         function Colorpicker:Get()
@@ -2031,20 +2000,6 @@ local Library do
                     end
                 end
             else 
-                for Index, Value in Items["Window"].Instance:GetDescendants() do 
-                    if Value:IsA("UIStroke") then
-                        Tween:Create(Value, nil, {Transparency = 1}, true)
-                    elseif Value:IsA("TextButton") then
-                        Tween:Create(Value, nil, {TextTransparency = 1}, true)
-                        Value.ZIndex = 1
-                    end
-                end
-
-                task.wait(0.1)
-
-                Items["Window"]:Tween(nil, {BackgroundTransparency = 1})
-                Items["Window"].Instance.ZIndex = 1
-                task.wait(0.1)
                 Items["Window"].Instance.Visible = false
             end
 
@@ -2376,30 +2331,11 @@ local Library do
                 Items["MainFrame"].Instance.Visible = true
             end
 
-            local Descendants = Items["MainFrame"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["MainFrame"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, Window.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, Window.FadeSpeed)
-                end
+            if not Bool then
+                Items["MainFrame"].Instance.Visible = false
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["MainFrame"].Instance.Visible = Bool
-            end)
+            Debounce = false
         end
 
         Library:Connect(UserInputService.InputBegan, LPH_NO_VIRTUALIZE(function(Input, gp)
@@ -4253,30 +4189,11 @@ local Library do
                 Items["Open"].Instance.Position = UDim2New(0, -4, 0, -1)
             end
 
-            local Descendants = Items["OptionHolder"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["OptionHolder"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool, self.Window.FadeSpeed)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool, self.Window.FadeSpeed)
-                end
+            if not Bool then
+                Items["OptionHolder"].Instance.Visible = false
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
-                Items["OptionHolder"].Instance.Visible = Bool
-            end)
+            Debounce = false
         end
 
         for Index, Value in Dropdown.Items do 
