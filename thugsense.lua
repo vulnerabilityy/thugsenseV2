@@ -1571,14 +1571,16 @@ local Library do
             end
 
             Colorpicker.IsOpen = Bool
-            Debounce = true
+
+            Debounce = true 
 
             if Bool then 
+                Items["ColorpickerWindow"].Instance.Visible = true
+                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15)
+
                 if Library.CurrentColorpicker then
                     Library.CurrentColorpicker:SetOpen(false)
                 end
-                
-                Items["ColorpickerWindow"].Instance.Visible = true
                 Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
@@ -4060,13 +4062,11 @@ local Library do
 
             function OptionData:Toggle(State)
                 if State == "Active" then 
-                    OptionData.Text.Instance.TextColor3 = Library.Theme.Accent
-                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Accent"})
+                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
                 else
-                    OptionData.Text.Instance.TextColor3 = Library.Theme.Text
-                    OptionData.Text.Instance.TextTransparency = 0
                     OptionData.Text:ChangeItemTheme({TextColor3 = "Text"})
+                    OptionData.Text:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.48})
                 end
             end
 
@@ -4170,10 +4170,6 @@ local Library do
         end
 
         Items["Open"]:Connect("MouseButton1Down", function()
-            Dropdown:SetOpen(not Dropdown.IsOpen)
-        end)
-
-        Items["RealDropdown"]:Connect("MouseButton1Down", function()
             Dropdown:SetOpen(not Dropdown.IsOpen)
         end)
 
