@@ -1579,7 +1579,6 @@ local Library do
                 end
                 
                 Items["ColorpickerWindow"].Instance.Visible = true
-                Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerWindow"].Instance.AbsolutePosition.X, 0, Items["ColorpickerWindow"].Instance.AbsolutePosition.Y)
                 Library.CurrentColorpicker = Colorpicker
             else
                 Library.CurrentColorpicker = nil
@@ -4169,6 +4168,10 @@ local Library do
         for Index, Value in Dropdown.Items do 
             Dropdown:Add(Value)
         end
+
+        Items["Open"]:Connect("MouseButton1Down", function()
+            Dropdown:SetOpen(not Dropdown.IsOpen)
+        end)
 
         Items["RealDropdown"]:Connect("MouseButton1Down", function()
             Dropdown:SetOpen(not Dropdown.IsOpen)
